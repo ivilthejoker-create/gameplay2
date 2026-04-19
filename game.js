@@ -19,9 +19,11 @@ function preload() {
     // الخلفية: لون سادة أو رابط لصورة
     this.load.image('background', 'https://phaser.io');
     // اللاعب: مربع أزرق (كنائب عن الصورة)
-    this.load.image('player', 'https://phaser.io');
-    // الأعداء: مربع أحمر
-    this.load.image('enemy', 'https://phaser.io');
+
+    // رابط لصورة لاعب حقيقية (سفينة فضائية مثلاً)
+    this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-ship.png');
+    // رابط لصورة عدو
+    this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/badish.png');
 }
 
 function create() {
