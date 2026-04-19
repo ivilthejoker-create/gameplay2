@@ -1,4 +1,4 @@
-// 1. كائن إدارة النقاط (Object)
+// 1. كائن إدارة النقاط (Score Object)
 let ScoreManager = {
     current: 0,
     high: localStorage.getItem('high_score') || 0,
@@ -25,17 +25,17 @@ const config = {
 const game = new Phaser.Game(config);
 
 function preload() {
-    // حل مشكلة التيكستر: تأكد أن هذه الأسماء تطابق تماماً الملفات في GitHub
-    // إذا كانت الصور في مجلد، يجب كتابة اسم المجلد (مثلاً assets/sky.png)
-    this.load.image('background', 'sky.png');    
-    this.load.image('player', 'player.png');     
-    this.load.image('enemy', 'enemy.png');       
+    // العودة للروابط المباشرة لضمان عدم ظهور "التيكستر"
+    this.load.image('background', 'https://labs.phaser.io/assets/skies/space3.png');    
+    this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-ship.png');     
+    this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/slime.png');       
 }
 
 function create() {
-    // ترتيب الطبقات: الخلفية أولاً ثم السكور ثم اللاعب
+    // وضع الخلفية أولاً لضمان ظهور النص فوقها
     this.add.image(400, 300, 'background');
 
+    // كائن النص لعرض السكور
     scoreText = this.add.text(16, 16, 'النقاط: 0', { 
         fontSize: '32px', fill: '#ffffff', fontStyle: 'bold' 
     });
@@ -44,11 +44,12 @@ function create() {
     player.setCollideWorldBounds(true);
     
     if (isPremium) {
-        player.setTint(0x00ff00); // ميزة بريميوم
+        player.setTint(0x00ff00); // ميزة البريميوم (تغيير اللون)
     }
 
     enemies = this.physics.add.group();
     
+    // توليد عدو كل ثانية
     this.time.addEvent({
         delay: 1000,
         callback: spawnEnemy,
@@ -58,6 +59,7 @@ function create() {
 
     cursors = this.input.keyboard.createCursorKeys();
 
+    // منطق التصادم
     this.physics.add.overlap(player, enemies, () => {
         alert("انتهت اللعبة! نقاطك: " + Math.floor(ScoreManager.current / 10));
         ScoreManager.reset();
@@ -82,14 +84,14 @@ function update() {
     else if (cursors.down.isDown) player.setVelocityY(speed);
     else player.setVelocityY(0);
 
-    // تحديث الأوبجكت وعرضه
+    // تحديث النقاط كأوبجكت
     ScoreManager.add(1);
     scoreText.setText('النقاط: ' + Math.floor(ScoreManager.current / 10));
 
-    // الهدف النهائي: الفوز
+    // هدف الفوز عند 1000 نقطة
     if (Math.floor(ScoreManager.current / 10) >= 1000) {
         this.physics.pause();
-        alert("مبروك! أنت أسطورة، حققت 1000 نقطة!");
+        alert("مبروك! لقد حققت هدف الـ 1000 نقطة وفزت!");
         ScoreManager.reset();
         this.scene.restart();
     }
