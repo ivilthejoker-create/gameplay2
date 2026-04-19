@@ -1,4 +1,3 @@
-// 1. إعدادات اللعبة الأساسية
 var config = {
     type: Phaser.AUTO,
     width: 1000, 
@@ -18,39 +17,39 @@ var game = new Phaser.Game(config);
 var player, enemies, cursors, scoreText;
 var score = 0;
 
-// 2. تحميل الصور فقط (بدون صوت لتجنب الأخطاء)
 function preload() {
+    // التأكد من استخدام روابط الصور الرسمية
     this.load.image('background', 'https://labs.phaser.io/assets/skies/space3.png');    
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-ship.png');     
     this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/slime.png');       
 }
 
-// 3. إنشاء عناصر اللعبة
 function create() {
-    // الخلفية
-    this.add.image(500, 400, 'background').setScale(1.5);
+    // 1. الخلفية (أقل طبقة - Depth 0)
+    this.add.image(500, 400, 'background').setScale(1.5).setDepth(0);
 
-    // نص النقاط
+    // 2. نص النقاط (طبقة عالية - Depth 20)
     scoreText = this.add.text(20, 20, 'النقاط: 0', { 
         fontSize: '32px', 
         fill: '#ffffff' 
-    });
+    }).setDepth(20);
 
-    // إنشاء اللاعب
-    player = this.physics.add.sprite(500, 700, 'player');
+    // 3. إنشاء اللاعب (طبقة عالية جداً - Depth 10)
+    // وضعته في (500, 600) ليكون واضحاً في الشاشة
+    player = this.physics.add.sprite(500, 600, 'player');
     player.setCollideWorldBounds(true);
     player.setDepth(10); 
 
     enemies = this.physics.add.group();
     
-    // ظهور الأعداء بمعدل ثابت
+    // ظهور الأعداء
     this.time.addEvent({
         delay: 1000,
         callback: function() {
             var x = Phaser.Math.Between(50, 950);
             var enemy = enemies.create(x, -50, 'enemy');
             enemy.setVelocityY(250);
-            enemy.setDepth(10);
+            enemy.setDepth(5); // الأعداء تحت اللاعب (Depth 5) وفوق الخلفية
         },
         callbackScope: this,
         loop: true
@@ -60,13 +59,12 @@ function create() {
 
     // التصادم
     this.physics.add.overlap(player, enemies, function() {
-        alert("انتهت اللعبة! نقاطك: " + Math.floor(score / 10));
+        alert("انتهت اللعبة!");
         score = 0;
         this.scene.restart();
     }, null, this);
 }
 
-// 4. التحديث المستمر
 function update() {
     var speed = 450;
 
@@ -78,7 +76,6 @@ function update() {
     else if (cursors.down.isDown) player.setVelocityY(speed);
     else player.setVelocityY(0);
 
-    // تحديث النقاط
     score += 1;
     scoreText.setText('النقاط: ' + Math.floor(score / 10));
 }
