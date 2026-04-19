@@ -18,7 +18,7 @@ let spawnTimer; // متغير للتحكم في سرعة ظهور الأعداء
 
 const config = {
     type: Phaser.AUTO,
-    width: 800, height: 600,
+    width: 1000, height: 800,
     physics: { default: 'arcade', arcade: { gravity: { y: 0 } } },
     scene: { preload: preload, create: create, update: update }
 };
@@ -33,13 +33,13 @@ function preload() {
 }
 
 function create() {
-    this.add.image(400, 300, 'background');
+    this.add.image(500, 400, 'background').setcale(1.5);
 
     scoreText = this.add.text(16, 16, 'النقاط: 0', { 
         fontSize: '32px', fill: '#ffffff', fontStyle: 'bold' 
     });
 
-    player = this.physics.add.sprite(400, 300, 'player');
+    player = this.physics.add.sprite(500, 700, 'player');
     player.setCollideWorldBounds(true);
     
     if (isPremium) {
@@ -66,17 +66,17 @@ function create() {
 }
 
 function spawnEnemy() {
-    let x = Phaser.Math.Between(50, 750);
+    let x = Phaser.Math.Between(50, 950);
     let enemy = enemies.create(x, -50, 'enemy');
     
     // زيادة سرعة سقوط الأعداء بناءً على النقاط (الصعوبة)
     let currentScore = Math.floor(ScoreManager.current / 10);
     let extraSpeed = Math.min(currentScore, 400); // سرعة إضافية تصل لـ 400
-    enemy.setVelocityY(200 + extraSpeed); 
+    enemy.setVelocityY(200 + Math.min(Math.floor(ScoreManager.current / 10), 500)). 
 }
 
 function update() {
-    let speed = isPremium ? 550 : 350;
+    let speed = isPremium ? 600 : 400;
 
     if (cursors.left.isDown) player.setVelocityX(-speed);
     else if (cursors.right.isDown) player.setVelocityX(speed);
