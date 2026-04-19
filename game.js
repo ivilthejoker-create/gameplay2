@@ -1,7 +1,4 @@
-// 1. نظام النقاط البسيط
-var Score = 0;
-var player, enemies, cursors, scoreText;
-
+// 1. إعدادات اللعبة الأساسية
 var config = {
     type: Phaser.AUTO,
     width: 1000, 
@@ -18,33 +15,35 @@ var config = {
 };
 
 var game = new Phaser.Game(config);
+var player, enemies, cursors, scoreText;
+var score = 0;
 
+// 2. تحميل الصور فقط (بدون صوت لتجنب الأخطاء)
 function preload() {
-    // تحميل الصور فقط (حذفنا روابط الصوت تماماً لتجنب خطأ CORS و 404)
     this.load.image('background', 'https://labs.phaser.io/assets/skies/space3.png');    
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-ship.png');     
     this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/slime.png');       
 }
 
+// 3. إنشاء عناصر اللعبة
 function create() {
-    // إضافة الخلفية وتوسيعها
+    // الخلفية
     this.add.image(500, 400, 'background').setScale(1.5);
 
-    // إضافة نص النقاط
+    // نص النقاط
     scoreText = this.add.text(20, 20, 'النقاط: 0', { 
         fontSize: '32px', 
-        fill: '#ffffff',
-        fontStyle: 'bold'
+        fill: '#ffffff' 
     });
 
-    // إنشاء اللاعب في منتصف أسفل الشاشة
+    // إنشاء اللاعب
     player = this.physics.add.sprite(500, 700, 'player');
     player.setCollideWorldBounds(true);
-    player.setDepth(10); // لضمان ظهوره فوق الخلفية
+    player.setDepth(10); 
 
     enemies = this.physics.add.group();
     
-    // ظهور الأعداء كل ثانية بمعدل ثابت
+    // ظهور الأعداء بمعدل ثابت
     this.time.addEvent({
         delay: 1000,
         callback: function() {
@@ -59,18 +58,18 @@ function create() {
 
     cursors = this.input.keyboard.createCursorKeys();
 
-    // منطق الخسارة عند التصادم
+    // التصادم
     this.physics.add.overlap(player, enemies, function() {
-        alert("انتهت اللعبة! نقاطك: " + Math.floor(Score / 10));
-        Score = 0;
+        alert("انتهت اللعبة! نقاطك: " + Math.floor(score / 10));
+        score = 0;
         this.scene.restart();
     }, null, this);
 }
 
+// 4. التحديث المستمر
 function update() {
-    var speed = 400;
+    var speed = 450;
 
-    // التحكم في الحركة
     if (cursors.left.isDown) player.setVelocityX(-speed);
     else if (cursors.right.isDown) player.setVelocityX(speed);
     else player.setVelocityX(0);
@@ -79,7 +78,7 @@ function update() {
     else if (cursors.down.isDown) player.setVelocityY(speed);
     else player.setVelocityY(0);
 
-    // تحديث السكور
-    Score += 1;
-    scoreText.setText('النقاط: ' + Math.floor(Score / 10));
+    // تحديث النقاط
+    score += 1;
+    scoreText.setText('النقاط: ' + Math.floor(score / 10));
 }
