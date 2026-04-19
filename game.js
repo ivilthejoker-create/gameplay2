@@ -20,23 +20,18 @@ function preload() {
 }
 
 function create() {
-    // 1. الخلفية أولاً لكي لا تغطي العناصر الأخرى
     this.add.image(400, 300, 'background');
 
-    // 2. إظهار السكور (النقاط) - تم وضعه هنا ليظهر فوق الخلفية
+    // إنشاء كائن النص وإسناده للمتغير scoreText
     scoreText = this.add.text(16, 16, 'النقاط: 0', { 
         fontSize: '32px', 
         fill: '#ffffff',
         fontStyle: 'bold'
     });
-
-    // 3. إنشاء اللاعب
-    player = this.physics.add.sprite(400, 300, 'player').setCollideWorldBounds(true);
     
-    if (isPremium) {
-        player.setTint(0x00ff00); // لون مميز للمشتركين
-    }
-
+    // تأكد من وضع السطر أعلاه بعد الخلفية مباشرة ليظهر "كأوبجيكت" مرئي
+    // ... باقي كود اللاعب والأعداء
+}
     enemies = this.physics.add.group();
     
     this.time.addEvent({
@@ -63,25 +58,34 @@ function spawnEnemy() {
 }
 
 function update() {
-    let speed = isPremium ? 500 : 300;
+    // زيادة النقاط داخل الكائن
+    ScoreManager.add(1); 
 
-    if (cursors.left.isDown) player.setVelocityX(-speed);
-    else if (cursors.right.isDown) player.setVelocityX(speed);
-    else player.setVelocityX(0);
-
-    if (cursors.up.isDown) player.setVelocityY(-speed);
-    else if (cursors.down.isDown) player.setVelocityY(speed);
-    else player.setVelocityY(0);
-
-    // تحديث النقاط وهدف الفوز
-    score += 1;
-    scoreText.setText('النقاط: ' + Math.floor(score / 10));
-
-    if (Math.floor(score / 10) >= 500) {
-        this.physics.pause();
-        player.setTint(0xffd700);
-        alert("مبروك! لقد وصلت للهدف وفزت في اللعبة!");
-        score = 0;
-        this.scene.restart();
-    }
+    // تحديث النص المرئي باستخدام ميثودsetText
+    // نقسم على 10 ليكون العداد منطقياً
+    scoreText.setText('النقاط: ' + Math.floor(ScoreManager.current / 10));
+    
+    // ... باقي كود الحركة
 }
+}
+// تعريف كائن السكور
+let ScoreManager = {
+    current: 0,
+    high: localStorage.getItem('high_score') || 0,
+    
+    // ميثود لإضافة نقاط
+    add: function(points) {
+        this.current += points;
+    },
+    
+    // ميثود لإعادة التعيين عند الخسارة
+    reset: function() {
+        if (this.current > this.high) {
+            this.high = this.current;
+            localStorage.setItem('high_score', this.high);
+        }
+        this.current = 0;
+    }
+};
+
+let scoreText; // هذا هو كائن النص (Object) الذي يعرض النقاط في Phaser
