@@ -1,9 +1,7 @@
+let player, enemies, cursors;
+let score = 0;
+let scoreText;
 let isPremium = localStorage.getItem('game_key') === 'SECRET123'; 
-
-if (isPremium) {
-    player.setTint(0x00ff00); // تغيير لون اللاعب للذهبي
-    // أضف أسلحة أو سرعة مضاعفة
-}
 
 const config = {
     type: Phaser.AUTO,
@@ -12,57 +10,77 @@ const config = {
     scene: { preload: preload, create: create, update: update }
 };
 
-let player, enemies, cursors;
 const game = new Phaser.Game(config);
 
 function preload() {
-    // خلفية سماء (رابط صورة مباشر)
-    this.load.image('background', 'https://labs.phaser.io/assets/skies/space3.png');
-    
-    // لاعب (سفينة فضائية)
-    this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-ship.png');
-    
-    // عدو (كائن فضائي صغير)
-    this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/slime.png');
+    // تحميل الصور محلياً (تأكد من رفعها لـ GitHub بنفس الأسماء)
+    this.load.image('background', 'sky.png');    
+    this.load.image('player', 'player.png');     
+    this.load.image('enemy', 'enemy.png');       
 }
+
 function create() {
+    // 1. الخلفية أولاً لكي لا تغطي العناصر الأخرى
     this.add.image(400, 300, 'background');
 
-    // صنع اللاعب
+    // 2. إظهار السكور (النقاط) - تم وضعه هنا ليظهر فوق الخلفية
+    scoreText = this.add.text(16, 16, 'النقاط: 0', { 
+        fontSize: '32px', 
+        fill: '#ffffff',
+        fontStyle: 'bold'
+    });
+
+    // 3. إنشاء اللاعب
     player = this.physics.add.sprite(400, 300, 'player').setCollideWorldBounds(true);
     
-    // صنع مجموعة الأعداء
+    if (isPremium) {
+        player.setTint(0x00ff00); // لون مميز للمشتركين
+    }
+
     enemies = this.physics.add.group();
     
-    // توليد عدو كل ثانية
     this.time.addEvent({
         delay: 1000,
-        callback: () => {
-            let x = Phaser.Math.Between(0, 800);
-            let enemy = enemies.create(x, 0, 'enemy');
-            enemy.setVelocityY(200); // سرعة سقوط العدو
-        },
+        callback: spawnEnemy,
+        callbackScope: this,
         loop: true
     });
 
-    // التحكم بالأسهم
     cursors = this.input.keyboard.createCursorKeys();
 
-    // إذا لمس العدو اللاعب -> خسارة
+    // التصادم والخسارة
     this.physics.add.overlap(player, enemies, () => {
+        alert("انتهت اللعبة! نقاطك: " + Math.floor(score / 10));
+        score = 0;
         this.scene.restart();
-        alert("انتهت اللعبة! اشترِ مفتاحاً لتجربة أسلحة أقوى");
     });
 }
 
-function update() {
-    // ... كود الحركة الحالي ...
+function spawnEnemy() {
+    let x = Phaser.Math.Between(50, 750);
+    let enemy = enemies.create(x, -50, 'enemy');
+    enemy.setVelocityY(200);
+}
 
-    // إضافة هدف الفوز
-    if (score >= 5000) { // لاحظ أن السكور يزيد بسرعة في دالة update
-        this.physics.pause(); // إيقاف اللعبة
-        player.setTint(0xffd700); // تلوين السفينة بالذهبي كجائزة فوز
-        alert("مبروك! لقد أنجزت المهمة بنجاح!");
+function update() {
+    let speed = isPremium ? 500 : 300;
+
+    if (cursors.left.isDown) player.setVelocityX(-speed);
+    else if (cursors.right.isDown) player.setVelocityX(speed);
+    else player.setVelocityX(0);
+
+    if (cursors.up.isDown) player.setVelocityY(-speed);
+    else if (cursors.down.isDown) player.setVelocityY(speed);
+    else player.setVelocityY(0);
+
+    // تحديث النقاط وهدف الفوز
+    score += 1;
+    scoreText.setText('النقاط: ' + Math.floor(score / 10));
+
+    if (Math.floor(score / 10) >= 500) {
+        this.physics.pause();
+        player.setTint(0xffd700);
+        alert("مبروك! لقد وصلت للهدف وفزت في اللعبة!");
         score = 0;
         this.scene.restart();
     }
