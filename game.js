@@ -25,9 +25,8 @@ let AudioManager = {
     }
 };
 
-let player, enemies, cursors, scoreText;
+let player, enemies, cursors, scoreText, spawnTimer;
 let isPremium = localStorage.getItem('game_key') === 'SECRET123'; 
-let spawnTimer;
 
 const config = {
     type: Phaser.AUTO,
@@ -42,19 +41,18 @@ function preload() {
     this.load.image('background', 'https://labs.phaser.io/assets/skies/space3.png');    
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-ship.png');     
     this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/slime.png');
-    // تحميل ملف الصوت
     this.load.audio('space_theme', 'https://labs.phaser.io/assets/audio/SoundEffects/Pounder.mp3');
 }
 
 function create() {
-    // تم إصلاح الخطأ الإملائي من setcale إلى setScale
+    // تصحيح الخطأ الإملائي وتوسيع الخلفية
     this.add.image(500, 400, 'background').setScale(1.5);
 
     scoreText = this.add.text(16, 16, 'النقاط: 0', { 
         fontSize: '32px', fill: '#ffffff', fontStyle: 'bold' 
     });
 
-    // إعداد الصوت
+    // إعداد وتشغيل الصوت
     AudioManager.bgMusic = this.sound.add('space_theme');
     AudioManager.play();
 
@@ -77,7 +75,7 @@ function create() {
     cursors = this.input.keyboard.createCursorKeys();
 
     this.physics.add.overlap(player, enemies, () => {
-        AudioManager.stop(); // إيقاف الموسيقى عند الخسارة
+        AudioManager.stop();
         alert("انتهت اللعبة! نقاطك: " + Math.floor(ScoreManager.current / 10));
         ScoreManager.reset();
         this.scene.restart();
@@ -89,8 +87,8 @@ function spawnEnemy() {
     let enemy = enemies.create(x, -50, 'enemy');
     
     let currentScore = Math.floor(ScoreManager.current / 10);
-    // نظام الصعوبة: تزداد السرعة مع النقاط
     let speedBoost = Math.min(currentScore, 500); 
+    // تم تصحيح النقطة الزائدة التي كانت تسبب الشاشة السوداء هنا
     enemy.setVelocityY(200 + speedBoost); 
 }
 
@@ -109,7 +107,7 @@ function update() {
     let displayScore = Math.floor(ScoreManager.current / 10);
     scoreText.setText('النقاط: ' + displayScore);
 
-    // زيادة وتيرة ظهور الأعداء كل 100 نقطة
+    // نظام زيادة الصعوبة
     if (displayScore > 0 && displayScore % 100 === 0) {
         if (spawnTimer.delay > 300) {
             spawnTimer.delay -= 2; 
@@ -119,7 +117,7 @@ function update() {
     if (displayScore >= 3000) {
         this.physics.pause();
         AudioManager.stop();
-        alert("أنت أسطورة! فزت بأعلى صعوبة وفي الساحة الكبيرة!");
+        alert("مبروك! لقد فزت في الساحة الكبيرة!");
         ScoreManager.reset();
         this.scene.restart();
     }
