@@ -16,16 +16,15 @@ let player, enemies, cursors;
 const game = new Phaser.Game(config);
 
 function preload() {
-    // الخلفية: لون سادة أو رابط لصورة
-    this.load.image('background', 'https://phaser.io');
-    // اللاعب: مربع أزرق (كنائب عن الصورة)
-
-    // رابط لصورة لاعب حقيقية (سفينة فضائية مثلاً)
+    // خلفية سماء (رابط صورة مباشر)
+    this.load.image('background', 'https://labs.phaser.io/assets/skies/space3.png');
+    
+    // لاعب (سفينة فضائية)
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-ship.png');
-    // رابط لصورة عدو
-    this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/badish.png');
+    
+    // عدو (كائن فضائي صغير)
+    this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/slime.png');
 }
-
 function create() {
     this.add.image(400, 300, 'background');
 
