@@ -12,13 +12,26 @@ let ScoreManager = {
     }
 };
 
+// 2. إدارة الصوت كأوبجكت (Audio Object)
+let AudioManager = {
+    bgMusic: null,
+    play: function() {
+        if (this.bgMusic && !this.bgMusic.isPlaying) {
+            this.bgMusic.play({ loop: true, volume: 0.5 });
+        }
+    },
+    stop: function() {
+        if (this.bgMusic) this.bgMusic.stop();
+    }
+};
+
 let player, enemies, cursors, scoreText;
 let isPremium = localStorage.getItem('game_key') === 'SECRET123'; 
-let spawnTimer; // متغير للتحكم في سرعة ظهور الأعداء
+let spawnTimer;
 
 const config = {
     type: Phaser.AUTO,
-    width: 1000, height: 800,
+    width: 1000, height: 800, // الساحة الكبيرة
     physics: { default: 'arcade', arcade: { gravity: { y: 0 } } },
     scene: { preload: preload, create: create, update: update }
 };
@@ -26,18 +39,24 @@ const config = {
 const game = new Phaser.Game(config);
 
 function preload() {
-    // روابط مباشرة تعمل فوراً
     this.load.image('background', 'https://labs.phaser.io/assets/skies/space3.png');    
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-ship.png');     
-    this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/slime.png');       
+    this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/slime.png');
+    // تحميل ملف الصوت
+    this.load.audio('space_theme', 'https://labs.phaser.io/assets/audio/SoundEffects/Pounder.mp3');
 }
 
 function create() {
-    this.add.image(500, 400, 'background').setcale(1.5);
+    // تم إصلاح الخطأ الإملائي من setcale إلى setScale
+    this.add.image(500, 400, 'background').setScale(1.5);
 
     scoreText = this.add.text(16, 16, 'النقاط: 0', { 
         fontSize: '32px', fill: '#ffffff', fontStyle: 'bold' 
     });
+
+    // إعداد الصوت
+    AudioManager.bgMusic = this.sound.add('space_theme');
+    AudioManager.play();
 
     player = this.physics.add.sprite(500, 700, 'player');
     player.setCollideWorldBounds(true);
@@ -48,7 +67,6 @@ function create() {
 
     enemies = this.physics.add.group();
     
-    // إعداد المؤقت الأولي لظهور الأعداء
     spawnTimer = this.time.addEvent({
         delay: 1000,
         callback: spawnEnemy,
@@ -59,6 +77,7 @@ function create() {
     cursors = this.input.keyboard.createCursorKeys();
 
     this.physics.add.overlap(player, enemies, () => {
+        AudioManager.stop(); // إيقاف الموسيقى عند الخسارة
         alert("انتهت اللعبة! نقاطك: " + Math.floor(ScoreManager.current / 10));
         ScoreManager.reset();
         this.scene.restart();
@@ -69,10 +88,10 @@ function spawnEnemy() {
     let x = Phaser.Math.Between(50, 950);
     let enemy = enemies.create(x, -50, 'enemy');
     
-    // زيادة سرعة سقوط الأعداء بناءً على النقاط (الصعوبة)
     let currentScore = Math.floor(ScoreManager.current / 10);
-    let extraSpeed = Math.min(currentScore, 400); // سرعة إضافية تصل لـ 400
-    enemy.setVelocityY(200 + Math.min(Math.floor(ScoreManager.current / 10), 500)). 
+    // نظام الصعوبة: تزداد السرعة مع النقاط
+    let speedBoost = Math.min(currentScore, 500); 
+    enemy.setVelocityY(200 + speedBoost); 
 }
 
 function update() {
@@ -90,16 +109,17 @@ function update() {
     let displayScore = Math.floor(ScoreManager.current / 10);
     scoreText.setText('النقاط: ' + displayScore);
 
-    // زيادة وتيرة ظهور الأعداء (صعوبة إضافية كل 100 نقطة)
+    // زيادة وتيرة ظهور الأعداء كل 100 نقطة
     if (displayScore > 0 && displayScore % 100 === 0) {
-        if (spawnTimer.delay > 300) { // الحد الأدنى للتأخير هو 300ms
+        if (spawnTimer.delay > 300) {
             spawnTimer.delay -= 2; 
         }
     }
 
-    if (displayScore >= 2000) {
+    if (displayScore >= 3000) {
         this.physics.pause();
-        alert("أنت بطل حقيقي! فزت بأعلى صعوبة!");
+        AudioManager.stop();
+        alert("أنت أسطورة! فزت بأعلى صعوبة وفي الساحة الكبيرة!");
         ScoreManager.reset();
         this.scene.restart();
     }
