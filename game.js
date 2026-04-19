@@ -1,74 +1,76 @@
-// 1. نظام النقاط (Score)
-let ScoreManager = {
-    current: 0,
-    add: function(points) { this.current += points; },
-    reset: function() { this.current = 0; }
-};
+// 1. نظام النقاط البسيط
+var Score = 0;
+var player, enemies, cursors, scoreText;
 
-let player, enemies, cursors, scoreText;
-
-const config = {
+var config = {
     type: Phaser.AUTO,
     width: 1000, 
     height: 800,
-    physics: { default: 'arcade', arcade: { gravity: { y: 0 } } },
-    scene: { preload: preload, create: create, update: update }
+    physics: { 
+        default: 'arcade', 
+        arcade: { gravity: { y: 0 } } 
+    },
+    scene: { 
+        preload: preload, 
+        create: create, 
+        update: update 
+    }
 };
 
-const game = new Phaser.Game(config);
+var game = new Phaser.Game(config);
 
 function preload() {
-    // روابط الصور المباشرة
+    // تحميل الصور فقط (حذفنا روابط الصوت تماماً لتجنب خطأ CORS و 404)
     this.load.image('background', 'https://labs.phaser.io/assets/skies/space3.png');    
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-ship.png');     
     this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/slime.png');       
 }
 
 function create() {
-    // الخلفية مصممة لتناسب مساحة 1000x800
+    // إضافة الخلفية وتوسيعها
     this.add.image(500, 400, 'background').setScale(1.5);
 
-    // عرض النقاط في الزاوية
-    scoreText = this.add.text(16, 16, 'النقاط: 0', { 
-        fontSize: '32px', fill: '#ffffff', fontStyle: 'bold' 
+    // إضافة نص النقاط
+    scoreText = this.add.text(20, 20, 'النقاط: 0', { 
+        fontSize: '32px', 
+        fill: '#ffffff',
+        fontStyle: 'bold'
     });
 
-    // إنشاء اللاعب في منتصف الساحة
-    player = this.physics.add.sprite(500, 400, 'player');
+    // إنشاء اللاعب في منتصف أسفل الشاشة
+    player = this.physics.add.sprite(500, 700, 'player');
     player.setCollideWorldBounds(true);
-    player.setDepth(1); 
+    player.setDepth(10); // لضمان ظهوره فوق الخلفية
 
     enemies = this.physics.add.group();
     
-    // ظهور الأعداء بمعدل ثابت (كل ثانية عدو واحد)
+    // ظهور الأعداء كل ثانية بمعدل ثابت
     this.time.addEvent({
         delay: 1000,
-        callback: spawnEnemy,
+        callback: function() {
+            var x = Phaser.Math.Between(50, 950);
+            var enemy = enemies.create(x, -50, 'enemy');
+            enemy.setVelocityY(250);
+            enemy.setDepth(10);
+        },
         callbackScope: this,
         loop: true
     });
 
     cursors = this.input.keyboard.createCursorKeys();
 
-    // منطق التصادم
-    this.physics.add.overlap(player, enemies, () => {
-        alert("انتهت اللعبة! نقاطك: " + Math.floor(ScoreManager.current / 10));
-        ScoreManager.reset();
+    // منطق الخسارة عند التصادم
+    this.physics.add.overlap(player, enemies, function() {
+        alert("انتهت اللعبة! نقاطك: " + Math.floor(Score / 10));
+        Score = 0;
         this.scene.restart();
-    });
-}
-
-function spawnEnemy() {
-    // ظهور العدو في مكان عشوائي على عرض الساحة
-    let x = Phaser.Math.Between(50, 950);
-    let enemy = enemies.create(x, -50, 'enemy');
-    enemy.setDepth(1);
-    enemy.setVelocityY(250); // سرعة ثابتة للأعداء (تم إلغاء الصعوبة)
+    }, null, this);
 }
 
 function update() {
-    let speed = 400; // سرعة ثابتة للاعب
+    var speed = 400;
 
+    // التحكم في الحركة
     if (cursors.left.isDown) player.setVelocityX(-speed);
     else if (cursors.right.isDown) player.setVelocityX(speed);
     else player.setVelocityX(0);
@@ -77,7 +79,7 @@ function update() {
     else if (cursors.down.isDown) player.setVelocityY(speed);
     else player.setVelocityY(0);
 
-    // تحديث السكور بشكل مستمر
-    ScoreManager.add(1);
-    scoreText.setText('النقاط: ' + Math.floor(ScoreManager.current / 10));
+    // تحديث السكور
+    Score += 1;
+    scoreText.setText('النقاط: ' + Math.floor(Score / 10));
 }
