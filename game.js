@@ -56,13 +56,14 @@ function create() {
 }
 
 function update() {
-    if (cursors.left.isDown) player.setVelocityX(-300);
-    else if (cursors.right.isDown) player.setVelocityX(300);
-    else player.setVelocityX(0);
+    // ... كود الحركة الحالي ...
 
-    if (cursors.up.isDown) player.setVelocityY(-300);
-    else if (cursors.down.isDown) player.setVelocityY(300);
-    else player.setVelocityY(0);
+    // إضافة هدف الفوز
+    if (score >= 5000) { // لاحظ أن السكور يزيد بسرعة في دالة update
+        this.physics.pause(); // إيقاف اللعبة
+        player.setTint(0xffd700); // تلوين السفينة بالذهبي كجائزة فوز
+        alert("مبروك! لقد أنجزت المهمة بنجاح!");
+        score = 0;
+        this.scene.restart();
+    }
 }
-
-
