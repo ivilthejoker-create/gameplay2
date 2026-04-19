@@ -14,6 +14,7 @@ let ScoreManager = {
 
 let player, enemies, cursors, scoreText;
 let isPremium = localStorage.getItem('game_key') === 'SECRET123'; 
+let spawnTimer; // متغير للتحكم في سرعة ظهور الأعداء
 
 const config = {
     type: Phaser.AUTO,
@@ -25,36 +26,30 @@ const config = {
 const game = new Phaser.Game(config);
 
 function preload() {
-    // استخدام روابط مباشرة (لا تحتاج لتحميل صور على جهازك)
+    // روابط مباشرة تعمل فوراً
     this.load.image('background', 'https://labs.phaser.io/assets/skies/space3.png');    
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-ship.png');     
     this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/slime.png');       
 }
 
 function create() {
-    // إضافة الخلفية أولاً لضمان ظهور كل شيء فوقها
     this.add.image(400, 300, 'background');
 
-    // إنشاء كائن النص لعرض النقاط (scoreText Object)
     scoreText = this.add.text(16, 16, 'النقاط: 0', { 
-        fontSize: '32px', 
-        fill: '#ffffff', 
-        fontStyle: 'bold' 
+        fontSize: '32px', fill: '#ffffff', fontStyle: 'bold' 
     });
 
-    // إنشاء اللاعب وتفعيل الحدود
     player = this.physics.add.sprite(400, 300, 'player');
     player.setCollideWorldBounds(true);
     
-    // تفعيل ميزة البريميوم (تغيير اللون للتميز)
     if (isPremium) {
         player.setTint(0x00ff00); 
     }
 
     enemies = this.physics.add.group();
     
-    // توليد عدو عشوائي كل ثانية
-    this.time.addEvent({
+    // إعداد المؤقت الأولي لظهور الأعداء
+    spawnTimer = this.time.addEvent({
         delay: 1000,
         callback: spawnEnemy,
         callbackScope: this,
@@ -63,9 +58,8 @@ function create() {
 
     cursors = this.input.keyboard.createCursorKeys();
 
-    // منطق التصادم والخسارة
     this.physics.add.overlap(player, enemies, () => {
-        alert("انتهت اللعبة! نقاطك الحالية: " + Math.floor(ScoreManager.current / 10));
+        alert("انتهت اللعبة! نقاطك: " + Math.floor(ScoreManager.current / 10));
         ScoreManager.reset();
         this.scene.restart();
     });
@@ -74,12 +68,15 @@ function create() {
 function spawnEnemy() {
     let x = Phaser.Math.Between(50, 750);
     let enemy = enemies.create(x, -50, 'enemy');
-    enemy.setVelocityY(200); // سرعة سقوط العدو لأسفل
+    
+    // زيادة سرعة سقوط الأعداء بناءً على النقاط (الصعوبة)
+    let currentScore = Math.floor(ScoreManager.current / 10);
+    let extraSpeed = Math.min(currentScore, 400); // سرعة إضافية تصل لـ 400
+    enemy.setVelocityY(200 + extraSpeed); 
 }
 
 function update() {
-    // تحديد السرعة بناءً على حالة التميز
-    let speed = isPremium ? 550 : 300;
+    let speed = isPremium ? 550 : 350;
 
     if (cursors.left.isDown) player.setVelocityX(-speed);
     else if (cursors.right.isDown) player.setVelocityX(speed);
@@ -89,14 +86,20 @@ function update() {
     else if (cursors.down.isDown) player.setVelocityY(speed);
     else player.setVelocityY(0);
 
-    // تحديث النقاط كأوبجكت وعرضها
     ScoreManager.add(1);
-    scoreText.setText('النقاط: ' + Math.floor(ScoreManager.current / 10));
+    let displayScore = Math.floor(ScoreManager.current / 10);
+    scoreText.setText('النقاط: ' + displayScore);
 
-    // هدف الفوز: الوصول لـ 1000 نقطة
-    if (Math.floor(ScoreManager.current / 10) >= 1000) {
+    // زيادة وتيرة ظهور الأعداء (صعوبة إضافية كل 100 نقطة)
+    if (displayScore > 0 && displayScore % 100 === 0) {
+        if (spawnTimer.delay > 300) { // الحد الأدنى للتأخير هو 300ms
+            spawnTimer.delay -= 2; 
+        }
+    }
+
+    if (displayScore >= 2000) {
         this.physics.pause();
-        alert("تهانينا! حققت هدف الـ 1000 نقطة وفزت باللعبة!");
+        alert("أنت بطل حقيقي! فزت بأعلى صعوبة!");
         ScoreManager.reset();
         this.scene.restart();
     }
